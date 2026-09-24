@@ -18,7 +18,7 @@ const url = `${publicUrl}/api/telegram`;
 await callTelegram('setWebhook', {
   url,
   secret_token: process.env.TELEGRAM_WEBHOOK_SECRET || undefined,
-  allowed_updates: ['message'],
+  allowed_updates: ['message', 'channel_post'],
   drop_pending_updates: true,
 });
 console.log(`Webhook set to ${url}`);

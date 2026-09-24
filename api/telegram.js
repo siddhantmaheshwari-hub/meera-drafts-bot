@@ -21,7 +21,8 @@ export default async function handler(req, res) {
     return res.status(401).send('Unauthorized');
   }
 
-  const message = req.body?.message;
+  // Direct messages arrive as `message`; notes posted in a channel the bot administers arrive as `channel_post`.
+  const message = req.body?.message || req.body?.channel_post;
   const chatId = message?.chat?.id;
   // Ignore edits, channel posts, etc. Always 200 so Telegram doesn't retry.
   if (!chatId) return res.status(200).json({ ok: true });
