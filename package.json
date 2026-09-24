@@ -1,0 +1,15 @@
+{
+  "name": "meera-drafts-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Telegram bot that turns Meera's notes into LinkedIn drafts in her voice using Gemini. Runs on Vercel.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "set-webhook": "node --env-file=.env.local scripts/set-webhook.js",
+    "webhook-info": "node --env-file=.env.local scripts/set-webhook.js --info",
+    "draft": "node --env-file=.env.local scripts/try-draft.js"
+  }
+}
