@@ -36,7 +36,7 @@ No npm dependencies. It needs Node 18 or later (Vercel's runtime already qualifi
    npm run set-webhook
    ```
 5. **Using a channel instead of DMs (optional).** Add the bot to the channel as an admin with "Post messages" permission. Notes posted there get a draft reply in the same channel. Channel IDs start with `-100`.
-6. **Lock it to Meera.** Have Meera send `/start` to the bot, and it replies with her chat ID. Put that number in `ALLOWED_CHAT_IDS` on Vercel and redeploy. Until you do, anyone who finds the bot can use your Gemini quota.
+6. **Lock it to Meera.** Have Meera send `/start` to the bot, and it replies with her chat ID. `/start` and `/id` work in any chat, even one that isn't allowed yet. Put that number in `ALLOWED_CHAT_IDS` on Vercel and redeploy. Separate multiple IDs with commas, for example `-1003979909185,123456789`. Notes only get drafted in chats on that list. If the list is empty, anyone who finds the bot can use your Gemini quota.
 
 If Vercel Deployment Protection is on for production, Telegram's requests will be blocked. Turn it off for the production domain, or use a URL that isn't protected.
 

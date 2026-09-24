@@ -29,24 +29,30 @@ export default async function handler(req, res) {
 
   try {
     const allowed = allowedChatIds();
-    if (allowed.length && !allowed.includes(String(chatId))) {
-      await sendMessage(chatId, 'Sorry, this bot is private.');
+    const isAllowed = !allowed.length || allowed.includes(String(chatId));
+    const text = (message.text || message.caption || '').trim();
+    const command = text.split(/[\s@]/)[0]; // "/start@my_bot" -> "/start"
+
+    // Commands answer in any chat, so a new chat can find the ID to add to ALLOWED_CHAT_IDS.
+    // They never call Gemini, so this doesn't open the bot up.
+    if (command === '/start' || command === '/help' || command === '/id') {
+      const status = isAllowed
+        ? ''
+        : '\n\nThis chat is not enabled yet. Add this ID to ALLOWED_CHAT_IDS in Vercel and redeploy.';
+      const intro = command === '/id' ? '' : `${WELCOME}\n\n`;
+      await sendMessage(chatId, `${intro}Your chat ID is ${chatId}.${status}`);
+      return res.status(200).json({ ok: true });
+    }
+
+    if (!isAllowed) {
+      console.warn(`Rejected note from chat ${chatId} (not in ALLOWED_CHAT_IDS)`);
+      await sendMessage(chatId, `Sorry, this bot is private. (Chat ID: ${chatId})`);
       return res.status(200).json({ ok: true });
     }
     if (!allowed.length) {
       console.warn(`ALLOWED_CHAT_IDS is empty; accepting chat ${chatId}. Set it to lock the bot down.`);
     }
 
-    const text = (message.text || message.caption || '').trim();
-
-    if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, `${WELCOME}\n\nYour chat ID is ${chatId}.`);
-      return res.status(200).json({ ok: true });
-    }
-    if (text === '/id') {
-      await sendMessage(chatId, `Your chat ID is ${chatId}.`);
-      return res.status(200).json({ ok: true });
-    }
     if (!text) {
       await sendMessage(chatId, 'I can only work from text notes for now. Please type or paste the note.');
       return res.status(200).json({ ok: true });
