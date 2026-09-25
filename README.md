@@ -49,7 +49,8 @@ If Vercel Deployment Protection is on for production, Telegram's requests will b
 Before drafting, Gemini scores each note from 0 to 10 against `prompts/scoring.md` and returns `{"score", "reason"}` as JSON. The reply is validated strictly: the score must be a whole number from 0 to 10, and the reason can't be empty.
 
 - **Score below 6:** the bot replies "I didn't create a draft because this note isn't substantive enough yet: {reason}" and stops. The drafting step never runs.
-- **Score of 6 or higher:** the note goes to the drafting step unchanged.
+- **Score of 6 or higher:** the bot replies "Score: N/10. {reason}", and the note goes to the drafting step unchanged.
+- Rejections end with a line giving the score, for example "Score: 3/10 (a draft needs 6 or more)".
 - **Malformed or failed scoring:** the bot re-asks once. If it still fails, the bot sends its usual error message and doesn't draft. A scoring failure never lets a note through.
 
 ## Daily news drafts
@@ -61,6 +62,8 @@ Every day at 08:00 IST (02:30 UTC), Vercel Cron calls `/api/news-drafts`:
 3. For each story, it decodes the Google News link and reads the article. Paywalled or unreadable pages are skipped.
 4. The article goes through the **same scoring guardrail and drafting step** as Meera's own notes. It carries a header saying the facts belong to the publication and must be credited to it, never presented as Meera's experience.
 5. Drafts are posted to the news chat (`NEWS_CHAT_ID`, or the first `ALLOWED_CHAT_IDS` entry). A second message lists the stories that weren't drafted, with the reasons.
+
+Send `/news` to the bot to run it on demand. The bot replies right away and posts the drafts to that chat a few minutes later; the work runs in the background with Vercel's `waitUntil`.
 
 `npm run news` runs the job locally and prints what it would send. `npm run news -- --send` really posts it. The job needs `CRON_SECRET` set in Vercel; without it, the endpoint refuses every request.
 

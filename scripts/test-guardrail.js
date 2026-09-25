@@ -81,17 +81,17 @@ const cases = [
   {
     name: 'TEST A - substantive note',
     text: "I've noticed that customers often ask whether our niacinamide is 5% or 10%, but the percentage alone doesn't tell you much. The pH, delivery base and batch consistency can all affect what the finished product actually delivers. We should explain why concentration on the label is only the beginning of the question.",
-    expect: (r, s) => s >= 6 && r.drafted && r.messages.length === 1 && !r.messages[0].startsWith(REJECT_PREFIX),
+    expect: (r, s) => s >= 6 && r.drafted && r.messages.length === 2 && r.messages[0].startsWith(`Score: ${s}/10`) && !r.messages[1].startsWith(REJECT_PREFIX),
   },
   {
     name: 'TEST B - task/reminder',
     text: 'Write something about niacinamide tomorrow.',
-    expect: (r, s) => s <= 3 && !r.drafted && r.messages.length === 1 && r.messages[0].startsWith(REJECT_PREFIX),
+    expect: (r, s) => s <= 3 && !r.drafted && r.messages.length === 1 && r.messages[0].startsWith(REJECT_PREFIX) && r.messages[0].includes(`Score: ${s}/10`),
   },
   {
     name: 'TEST C - abandoned/general thought',
     text: 'Need to write about climate and skincare formulations.',
-    expect: (r, s) => s < 6 && !r.drafted && r.messages.length === 1 && r.messages[0].startsWith(REJECT_PREFIX),
+    expect: (r, s) => s < 6 && !r.drafted && r.messages.length === 1 && r.messages[0].startsWith(REJECT_PREFIX) && r.messages[0].includes(`Score: ${s}/10`),
   },
 ];
 
@@ -99,7 +99,7 @@ for (const c of cases) {
   const r = await runNote(c.text);
   const s = scoreOf(r.scoreLine);
   check(c.name, c.expect(r, s), `| ${r.scoreLine} | drafting called: ${r.drafted}`);
-  console.log(`      Telegram reply: ${(r.messages[0] || '(none)').slice(0, 300).replace(/\n+/g, ' / ')}${(r.messages[0] || '').length > 300 ? '...' : ''}`);
+  console.log(`      Telegram reply: ${(r.messages.join(' || ') || '(none)').slice(0, 300).replace(/\n+/g, ' / ')}${r.messages.join(' || ').length > 300 ? '...' : ''}`);
 }
 
 // ---- Malformed scorer output through the real handler: must not draft ----

@@ -22,4 +22,13 @@ await callTelegram('setWebhook', {
   drop_pending_updates: true,
 });
 console.log(`Webhook set to ${url}`);
+// Shows these in Telegram's "/" menu.
+await callTelegram('setMyCommands', {
+  commands: [
+    { command: 'news', description: "Drafts from today's skincare news" },
+    { command: 'start', description: 'How this bot works' },
+    { command: 'id', description: 'Show this chat ID' },
+  ],
+});
+console.log('Bot commands registered');
 console.log(await callTelegram('getWebhookInfo', {}));

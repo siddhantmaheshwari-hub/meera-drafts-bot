@@ -1,8 +1,10 @@
+import { waitUntil } from '@vercel/functions';
 import { draftPost, scoreNote, PASSING_SCORE } from '../lib/gemini.js';
+import { runNewsDrafts } from '../lib/news.js';
 import { sendMessage, sendTyping } from '../lib/telegram.js';
 
 const WELCOME =
-  "Hi Meera. Send me a note (as rough as you like) and I'll reply with a LinkedIn draft in your voice.";
+  "Hi Meera. Send me a note and I'll score it from 0 to 10. Notes scoring 6 or more get a LinkedIn draft in your voice.\n\nSend /news to get drafts from today's skincare news. They also arrive automatically every morning at 8:00.";
 
 function allowedChatIds() {
   return (process.env.ALLOWED_CHAT_IDS || '')
@@ -53,6 +55,19 @@ export default async function handler(req, res) {
       console.warn(`ALLOWED_CHAT_IDS is empty; accepting chat ${chatId}. Set it to lock the bot down.`);
     }
 
+    // News takes minutes (article fetches, several Gemini calls), so reply now and finish in the
+    // background. Answering Telegram quickly stops it from re-sending /news and running it twice.
+    if (command === '/news') {
+      await sendMessage(chatId, "Looking through today's skincare news. Drafts will arrive here in a few minutes.");
+      waitUntil(
+        runNewsDrafts({ send: (t) => sendMessage(chatId, t) }).catch(async (err) => {
+          console.error(err);
+          await sendMessage(chatId, "Sorry, I couldn't fetch the news just now. Please try /news again later.").catch(() => {});
+        }),
+      );
+      return res.status(200).json({ ok: true });
+    }
+
     if (!text) {
       await sendMessage(chatId, 'I can only work from text notes for now. Please type or paste the note.');
       return res.status(200).json({ ok: true });
@@ -68,12 +83,14 @@ export default async function handler(req, res) {
     if (score < PASSING_SCORE) {
       await sendMessage(
         chatId,
-        `I didn't create a draft because this note isn't substantive enough yet: ${reason}`,
+        `I didn't create a draft because this note isn't substantive enough yet: ${reason}\n\nScore: ${score}/10 (a draft needs ${PASSING_SCORE} or more)`,
         message.message_id,
       );
       return res.status(200).json({ ok: true });
     }
 
+    await sendMessage(chatId, `Score: ${score}/10. ${reason}\n\nWriting the draft now...`, message.message_id);
+    await sendTyping(chatId).catch(() => {});
     const draft = await draftPost(text);
     await sendMessage(chatId, draft, message.message_id);
   } catch (err) {

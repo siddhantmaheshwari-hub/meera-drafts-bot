@@ -13,5 +13,8 @@
     "draft": "node --env-file=.env.local scripts/try-draft.js",
     "test:guardrail": "node --env-file=.env.local scripts/test-guardrail.js",
     "news": "node --env-file=.env.local scripts/try-news.js"
+  },
+  "dependencies": {
+    "@vercel/functions": "^3.9.9"
   }
 }
