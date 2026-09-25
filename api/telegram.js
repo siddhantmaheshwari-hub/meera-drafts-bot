@@ -1,4 +1,4 @@
-import { draftPost } from '../lib/gemini.js';
+import { draftPost, scoreNote, PASSING_SCORE } from '../lib/gemini.js';
 import { sendMessage, sendTyping } from '../lib/telegram.js';
 
 const WELCOME =
@@ -59,6 +59,21 @@ export default async function handler(req, res) {
     }
 
     await sendTyping(chatId).catch(() => {});
+
+    // Scoring guardrail: only notes scoring PASSING_SCORE or higher reach the drafting step.
+    // If scoring fails (malformed output, API error), scoreNote throws and the catch below
+    // replies with an error, so nothing is drafted.
+    const { score, reason } = await scoreNote(text);
+    console.log(`Note scored ${score}/10: ${reason}`);
+    if (score < PASSING_SCORE) {
+      await sendMessage(
+        chatId,
+        `I didn't create a draft because this note isn't substantive enough yet: ${reason}`,
+        message.message_id,
+      );
+      return res.status(200).json({ ok: true });
+    }
+
     const draft = await draftPost(text);
     await sendMessage(chatId, draft, message.message_id);
   } catch (err) {

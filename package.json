@@ -10,6 +10,8 @@
   "scripts": {
     "set-webhook": "node --env-file=.env.local scripts/set-webhook.js",
     "webhook-info": "node --env-file=.env.local scripts/set-webhook.js --info",
-    "draft": "node --env-file=.env.local scripts/try-draft.js"
+    "draft": "node --env-file=.env.local scripts/try-draft.js",
+    "test:guardrail": "node --env-file=.env.local scripts/test-guardrail.js",
+    "news": "node --env-file=.env.local scripts/try-news.js"
   }
 }
